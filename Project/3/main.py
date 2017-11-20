@@ -168,7 +168,7 @@ def trainNetwork():
 
 start_time = time.time()
 y, regLoss = logistiticRegression(x)
-nEpochs = 100
+nEpochs = 50
 trainNetwork()
 print("--- %s seconds ---" % (time.time() - start_time))
 
@@ -178,7 +178,7 @@ nEpochs = 25
 trainNetwork()
 print("--- %s seconds ---" % (time.time() - start_time))
 
-nEpochs = 14
+nEpochs = 15
 keepRate = 0.8
 start_time = time.time()
 y, regLoss = convolutionalNeuralNetwork(x)
