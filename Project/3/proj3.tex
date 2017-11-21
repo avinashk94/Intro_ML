@@ -8,6 +8,7 @@
 \usepackage{xcolor}
 \usepackage[]{authblk}
 \usepackage{amsmath}
+\usepackage{multirow}
 
 \renewcommand\familydefault{\sfdefault}
 \usepackage{tgheros}
@@ -152,7 +153,6 @@ For more effecient usage ease of access, I have implemented functional based app
 def logistiticRegression(x):
 	W = tf.Variable(tf.random_normal([10,784]))
 	b = tf.Variable(tf.zeros([10,1]))
-
 	z = tf.matmul(W,x) + b
 	return z
 \end{lstlisting}
@@ -207,7 +207,6 @@ def convolutionalNeuralNetwork(x):
 	Img = tf.reshape(x,[-1,28,28,1])
 	
 	conv1 = tf.nn.relu(convolve2D(Img,weights['conv1']) + biases['conv1'])
-	
 	conv1 = maxpool2d(conv1)
 	
 	conv2 = tf.nn.relu(convolve2D(conv1,weights['conv2']) + biases['conv2'])
@@ -312,7 +311,6 @@ def trainNetwork():
 \end{lstlisting}
 
 \section*{Results 1}
-
 The results are obtained by using the following...\\
 The below mentioned is for the regularised classifiers.
 \begin{lstlisting}[label={list:fourth}]
@@ -353,18 +351,180 @@ loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=tf.transpos
 \section*{Code Output}
 
 \begin{lstlisting}[label={list:fifth},caption=Code output.]
+Loss in  5  epoch is  434.564588502
+Loss in  10  epoch is  283.053186908
+Loss in  15  epoch is  230.45016335
+Loss in  20  epoch is  203.656288765
+Loss in  25  epoch is  186.209673814
+Loss in  30  epoch is  174.424843781
+Loss in  35  epoch is  165.422096811
+Loss in  40  epoch is  158.593220886
+Loss in  45  epoch is  153.709981691
+Loss in  50  epoch is  149.085173644
+Accuracy Train: 0.927236
+Accuracy validation: 0.9184
+Accuracy Test: 0.9183
+USPS Test Accuracy: 0.382269
+--- 152.29985189437866 seconds ---
+
+Loss in  5  epoch is  80293.9880066
+Loss in  10  epoch is  906.527707696
+Loss in  15  epoch is  199.356616914
+Loss in  20  epoch is  185.630731091
+Loss in  25  epoch is  173.179935709
+Accuracy Train: 0.961691
+Accuracy validation: 0.9562
+Accuracy Test: 0.958
+USPS Test Accuracy: 0.473374
+--- 436.300900220871 seconds ---
+
+Loss in  5  epoch is  18000747.418
+Loss in  10  epoch is  15646912.9043
+Loss in  15  epoch is  13774894.5742
+Accuracy Train: 0.993891
+Accuracy validation: 0.98
+Accuracy Test: 0.9792
+USPS Test Accuracy: 0.611831
+--- 1639.0891389846802 seconds ---
 
 \end{lstlisting}
 
 \section*{Results 2}
-
-
+The following are the brief obserations from the network
+\begin{center}
+	\begin{tabular}{|c|c|c|c|}
+		\hline
+		\multicolumn{2}{|c|}{Classifier} & Accuracy & Comments\\
+		\hline
+		\multirow{4}{*}{Logistic Regression} & Test &0.9183& \\
+		&Validation&0.9184&\\
+		& Training&0.927236&\\
+		& USPS &0.382269&\\
+		\hline
+			\multirow{4}{*}{Neural Network} & Test &0.958& \multirow{4}{*}{$\lambda$ = 0 n = 512}\\
+		&Validation&0.9562&\\
+		& Training&0.961691&\\
+		& USPS & 0.473374&\\
+		\hline
+		\multirow{4}{*}{Neural Network} & Test &0.9626&\multirow{4}{*}{$\lambda$ = 0.01 n = 512} \\
+		&Validation&0.9598&\\
+		& Training&0.966055&\\
+		& USPS & 0.502725&\\
+		\hline
+		\multirow{4}{*}{Neural Network} & Test &0.9648&\multirow{4}{*}{$\lambda$ = 0.01 n = 256} \\
+		&Validation&0.9638&\\
+		& Training&0.969291&\\
+		& USPS & 0.500475&\\
+		\hline
+			\multirow{4}{*}{CNN} & Test &0.9792& \\
+		&Validation&0.98&\\
+		& Training&0.993891&\\
+		& USPS &0.611831&\\
+		\hline
+	\end{tabular}
+\end{center}
 \begin{itemize}
  \item The effect of regularization is pretty evident in the accuracy results.
  \item The accuracy initailly decreased when ran the same number of epochs but an increase in the number of epochs has increased the accuracy steadily.
- 
-\item The learning time increases significantly with the increase in $\mathrm{M}$, the number of basis functions. 
+ \item It appears the sweet spot for neural networks in around 256 hidden units.
+ \item The weight regularization has definitely improved the UPSPS accuracy under identitcal conditions.
+ \item Regularization gives us the freedom to have higher number of Epochs because of the confidence of not over fitting. This was clearly observed in neural network and CNN whereas the whole accuracy of Logistic went down where regularisation is applied.
+ \item From the above accuracy results, the `No Free Lunch' theorem is proved.
 \end{itemize}
 
+\section*{Backpropogation}
+\begin{itemize}
+	\item Measures have taken to maintain the numerical stability of the code such as...
+	\item Normalisisng the image by subtracting the avg of the whole dataset from each iage.
+	\item Softmax is not directly applied, instead the exponentials are just used for denominator as the $\log$ of the numerator results in same value as before $\exp$.
+	\item The test accuracy is 0.91 for Logistic and 0.93 for Neural Networks.
+\end{itemize}
+\begin{lstlisting}
+#Logistitc
+W = np.random.randn(nClasses,nFeatures)
+b = np.zeros(nClasses)
 
+def findOut(x):
+	z1 = W.dot(x) + b[:,np.newaxis]
+	z1 -= np.max(z1,0)
+	zExp = np.exp(z1)
+	a = zExp/np.sum(zExp,0)
+	return a
+
+for _ in range(nEpochs):
+	loss = 0.0
+	#Forward....
+	z = W.dot(trainImages) + b[:,np.newaxis]
+	z -= np.max(z,0)
+	zExp = np.exp(z)
+	loss = -np.sum(np.multiply(trainLabels,(z-np.log(np.sum(zExp,0)))),0)
+	a = zExp/np.sum(zExp,0)
+	#     print(np.equal(np.argmax(findOut(testImages),0),np.argmax(testLabels,0)).shape)
+	corrert = np.sum(np.equal(np.argmax(findOut(testImages),0),np.argmax(testLabels,0)))/testLabels.shape[1]
+	corrert2 = np.sum(np.equal(np.argmax(a,0),np.argmax(trainLabels,0)))/m
+	print('Loss:',np.sum(loss),corrert,corrert2)
+	
+	#Backward
+	dz = (zExp/np.sum(zExp,0))-trainLabels
+	dW = dz.dot(trainImages.T)
+	db = np.sum(dz,1)
+	
+	W = W - learningRate*dW - lambdaa*W
+	b = b - learningRate*db
+
+#Neural Networks
+W1 = np.random.randn(nH1,nFeatures)
+b1 = np.zeros(nH1)
+
+W2 = np.random.randn(nClasses,nH1)
+b2 = np.zeros(nClasses)
+
+def findOut(x):
+	z1 = W1.dot(x) + b1[:,np.newaxis]
+	a1 = np.maximum(z1,0,z1)
+	
+	z2 = W2.dot(a1) + b2[:,np.newaxis]
+	z2 -= np.max(z2,0)
+	z2Exp = np.exp(z2)
+	a = z2Exp/np.sum(z2Exp,0)
+	#     print(a.shape)
+	return a
+
+for _ in range(nEpochs):
+	loss = 0.0
+	#Forward....
+	z1 = W1.dot(trainImages) + b1[:,np.newaxis]
+	#     a1 = np.maximum(z1,0,z1)
+	a1 = np.maximum(z1,0)
+	
+	z2 = W2.dot(a1) + b2[:,np.newaxis]
+	z2 -= np.max(z2,0)
+	z2Exp = np.exp(z2)
+	#     z2Exp[z2Exp<=0] = 1e-10
+	loss = -np.sum(np.multiply(trainLabels,z2-np.log(np.sum(z2Exp,0))),0) 
+	
+	#     print(np.equal(np.argmax(findOut(testImages),0),np.argmax(testLabels,0)).shape)
+	correct1 = np.sum(np.equal(np.argmax(findOut(trainImages),0),np.argmax(trainLabels,0)))/m
+	correct2 = np.sum(np.equal(np.argmax(findOut(testImages),0),np.argmax(testLabels,0)))/testLabels.shape[1]
+	correct3 = np.sum(np.equal(np.argmax(findOut(validationImages),0),np.argmax(validationLabels,0)))/validationLabels.shape[1]
+	print('Loss:',np.sum(loss), correct1, correct2, correct3)
+	
+	#Backward
+	dz2 = (z2Exp/np.sum(z2Exp,0))-trainLabels
+	#     print(np.sum(dz2))
+	dW2 = dz2.dot(a1.T)
+	db2 = np.sum(dz2,1)
+	
+	da1 = W2.T.dot(dz2)
+	dz1 = np.zeros_like(da1)
+	dz1[da1>0] = 1
+	
+	dW1 = dz1.dot(trainImages.T)
+	db1 = np.sum(dz1,1)
+	
+	W2 = W2 - learningRate*dW2 - lambdaa*W2
+	b2 = b2 - learningRate*db2
+	W1 = W1 - learningRate*dW1 - lambdaa*W1
+	b1 = b1 - learningRate*db1
+\end{lstlisting}
 \end{document}

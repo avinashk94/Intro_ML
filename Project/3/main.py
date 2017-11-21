@@ -57,7 +57,10 @@ printEvery = 5
 nEpochs = 15
 nClasses = 10
 learningRate = 0.005 #IF used....
-lambdaa = 0.05 #Regularization
+lambdaa = 0.01 #Regularization
+
+x = tf.placeholder(tf.float32, [784,None])
+t = tf.placeholder(tf.float32, [10,None])
 
 def convolve2D(x,W):
     return tf.nn.conv2d(x,W,strides=[1,1,1,1], padding='SAME')
@@ -136,7 +139,7 @@ def trainNetwork():
         tf.summary.scalar("loss",loss)
 
     with tf.name_scope("training") as scope:
-        optimizer = tf.train.AdamOptimizer(learning_rate=learningRate).minimize(loss)
+        optimizer = tf.train.AdamOptimizer().minimize(loss)
 
     with tf.name_scope("accuracy") as scope:
         correct = tf.equal(tf.argmax(y),tf.argmax(t))
