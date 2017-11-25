@@ -150,7 +150,7 @@ def trainNetwork():
     mergeSummary = tf.summary.merge_all()
 
     sess.run(init)
-    summaryWriter = tf.summary.FileWriter('../TFout/2', sess.graph)
+    summaryWriter = tf.summary.FileWriter('../TFout', sess.graph)
 
     for epoch in range(nEpochs):
         error = 0.0
